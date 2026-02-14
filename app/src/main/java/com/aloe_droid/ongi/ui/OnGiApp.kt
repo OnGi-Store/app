@@ -20,12 +20,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.aloe_droid.ongi.ui.navigation.NavUtil.Companion.safeMove
 import com.aloe_droid.ongi.ui.navigation.OnGiNavHost
-import com.aloe_droid.ongi.ui.navigation.OnGiTopBar
 import com.aloe_droid.ongi.ui.navigation.bottom.BottomRoute
 import com.aloe_droid.ongi.ui.navigation.bottom.OnGiBottomBar
 import com.aloe_droid.presentation.base.view.UiContract
 import com.aloe_droid.presentation.home.contract.Home
-import com.aloe_droid.presentation.search.contract.Search
 import kotlinx.coroutines.launch
 
 @Composable
@@ -39,20 +37,7 @@ fun OnGiApp(navController: NavHostController = rememberNavController()) {
             .fillMaxSize()
             .navigationBarsPadding(),
         snackbarHost = {
-            SnackbarHost(snackBarHostState)
-        },
-        topBar = {
-            backStackEntry?.let {
-                OnGiTopBar(
-                    backStackEntry = it,
-                    navigateUp = { navController.safeMove { navigateUp() } },
-                    navigateToSearch = {
-                        navController.safeMove {
-                            navigate(Search())
-                        }
-                    }
-                )
-            }
+            SnackbarHost(hostState = snackBarHostState)
         },
         bottomBar = {
             OnGiBottomBar(
