@@ -1,9 +1,11 @@
 package com.aloe_droid.ongi.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -35,6 +37,7 @@ fun OnGiApp(navController: NavHostController = rememberNavController()) {
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.surfaceContainer)
             .navigationBarsPadding(),
         snackbarHost = {
             SnackbarHost(hostState = snackBarHostState)
