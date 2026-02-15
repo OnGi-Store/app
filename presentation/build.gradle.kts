@@ -13,7 +13,7 @@ plugins {
 
 android {
     namespace = "com.aloe_droid.presentation"
-    compileSdk = 35
+    compileSdk = 36
 
     val properties = Properties()
     properties.load(FileInputStream(rootProject.file("local.properties")))
@@ -39,11 +39,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         compose = true
@@ -86,6 +83,7 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     // Compose
+    implementation(libs.androidx.compose.foundation.layout)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.hilt.navigation.compose)
