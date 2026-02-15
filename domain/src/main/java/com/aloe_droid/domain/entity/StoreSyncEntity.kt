@@ -1,6 +1,6 @@
 package com.aloe_droid.domain.entity
 
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 data class StoreSyncEntity(
     val storeCount: Long,

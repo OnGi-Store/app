@@ -4,13 +4,13 @@ import com.aloe_droid.data.datasource.dto.store.MenuDTO
 import com.aloe_droid.data.datasource.dto.store.StoreDTO
 import com.aloe_droid.data.datasource.dto.store.StoreDetailDTO
 import com.aloe_droid.data.datasource.dto.store.StorePage
-import kotlinx.datetime.Instant
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.QueryMap
 import java.util.UUID
+import kotlin.time.Instant
 
 interface StoreAPI {
 

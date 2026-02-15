@@ -9,9 +9,9 @@ import com.aloe_droid.data.datasource.network.util.ApiUtil.safeApiCallToFlow
 import com.aloe_droid.data.datasource.network.util.FlowUtil.retryOnIOException
 import com.aloe_droid.domain.entity.StoreQuery
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Instant
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Instant
 
 class StoreDataSourceImpl @Inject constructor(private val storeAPI: StoreAPI) : StoreDataSource {
 

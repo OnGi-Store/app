@@ -38,9 +38,9 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
-import kotlinx.datetime.Instant
 import java.util.UUID
 import javax.inject.Inject
+import kotlin.time.Instant
 
 class StoreRepositoryImpl @Inject constructor(
     private val storeDataSource: StoreDataSource,
