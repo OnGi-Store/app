@@ -93,6 +93,7 @@ fun SelectedStoreContent(
             PulsingCircularIndicator(
                 primaryColor = MaterialTheme.colorScheme.primary,
                 secondaryColor = MaterialTheme.colorScheme.secondary,
+                backgroundColor = MaterialTheme.colorScheme.surface,
             )
         }
     }
