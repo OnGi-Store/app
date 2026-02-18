@@ -6,13 +6,14 @@
         android:name=".ui.OnGiApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:enableOnBackInvokedCallback="false"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ongi"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ongi_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Ongi"
-        tools:targetApi="31">
+        tools:targetApi="33">
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
