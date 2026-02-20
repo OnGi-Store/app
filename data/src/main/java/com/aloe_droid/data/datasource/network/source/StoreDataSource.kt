@@ -6,8 +6,8 @@ import com.aloe_droid.data.datasource.dto.store.StoreDetailDTO
 import com.aloe_droid.data.datasource.dto.store.StorePage
 import com.aloe_droid.domain.entity.StoreQuery
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Instant
 import java.util.UUID
+import kotlin.time.Instant
 
 interface StoreDataSource {
 

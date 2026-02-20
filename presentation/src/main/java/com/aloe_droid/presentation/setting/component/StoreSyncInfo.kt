@@ -11,7 +11,7 @@ import com.aloe_droid.presentation.R
 import com.aloe_droid.presentation.base.theme.LargeTextSize
 import com.aloe_droid.presentation.base.theme.toCount
 import com.aloe_droid.presentation.base.theme.toTime
-import kotlinx.datetime.Instant
+import kotlin.time.Instant
 
 @Composable
 fun StoreSyncInfo(

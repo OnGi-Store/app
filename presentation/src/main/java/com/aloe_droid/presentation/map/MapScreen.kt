@@ -23,9 +23,11 @@ import com.aloe_droid.presentation.map.data.StoreMapData
 import com.naver.maps.geometry.LatLng
 import com.naver.maps.map.compose.ExperimentalNaverMapApi
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private const val DEFAULT_DELAY: Long = 300L
 
@@ -56,17 +58,18 @@ fun MapScreen(
     }
 
     LaunchedEffect(key1 = selectedMarkerStore) {
-        if (selectedMarkerStore != null) {
-            snapshotFlow { sheetState.bottomSheetState.currentValue }
-                .distinctUntilChanged()
-                .collect {
-                    if (it == SheetValue.Expanded) {
-                        selectStore(selectedMarkerStore)
-                        delay(DEFAULT_DELAY)
-                        sheetState.bottomSheetState.partialExpand()
-                    }
+        if (selectedMarkerStore == null) return@LaunchedEffect
+        snapshotFlow { sheetState.bottomSheetState.currentValue }
+            .distinctUntilChanged()
+            .collect { value: SheetValue ->
+                if (value != SheetValue.Expanded) return@collect
+                selectStore(selectedMarkerStore)
+
+                withContext(context = NonCancellable) {
+                    delay(timeMillis = DEFAULT_DELAY)
+                    sheetState.bottomSheetState.partialExpand()
                 }
-        }
+            }
     }
 
     BottomSheetScaffold(

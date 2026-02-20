@@ -1,7 +1,9 @@
 package com.aloe_droid.presentation.filtered_store.data
 
 import com.aloe_droid.domain.entity.StoreQueryDistance
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class StoreDistanceRange {
     M_5,
     K_1,

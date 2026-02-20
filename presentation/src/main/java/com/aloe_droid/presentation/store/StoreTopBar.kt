@@ -1,5 +1,6 @@
 package com.aloe_droid.presentation.store
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -12,37 +13,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
+import androidx.compose.ui.unit.dp
 import com.aloe_droid.presentation.base.theme.DefaultIconSize
-import com.aloe_droid.presentation.base.theme.DefaultTopBarMaxHeight
 import com.aloe_droid.presentation.base.theme.StarColor
-import com.aloe_droid.presentation.store.contract.StoreEvent
-import com.aloe_droid.presentation.store.contract.StoreUiData
 import com.aloe_droid.presentation.store.data.StoreData
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StoreTopBar(
-    backStackEntry: NavBackStackEntry,
-    navigateUp: () -> Unit
+    store: StoreData,
+    scrollBehavior: TopAppBarScrollBehavior,
+    navigateUp: () -> Unit,
+    sendToggleFavoriteEvent: () -> Unit
 ) {
-    val viewModel: StoreViewModel = hiltViewModel(viewModelStoreOwner = backStackEntry)
-    val uiData: StoreUiData by viewModel.uiData.collectAsStateWithLifecycle()
-    val store: StoreData? = uiData.store
-    val (isFavorite, setFavorite) = remember(store?.isLikeStore == true) {
-        mutableStateOf(store?.isLikeStore == true)
+    val (isFavorite, setFavorite) = remember(key1 = store.isLikeStore) {
+        mutableStateOf(store.isLikeStore)
     }
 
     TopAppBar(
-        expandedHeight = DefaultTopBarMaxHeight,
+        windowInsets = WindowInsets(top = 0.dp),
+        scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.secondary
         ),
@@ -52,13 +48,12 @@ fun StoreTopBar(
         actions = {
             FavoriteIcon(isFavorite = isFavorite) {
                 setFavorite(!isFavorite)
-                val event: StoreEvent = StoreEvent.ToggleFavorite
-                viewModel.sendEvent(event = event)
+                sendToggleFavoriteEvent()
             }
         },
         title = {
             Text(
-                text = store?.name ?: "",
+                text = store.name,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )

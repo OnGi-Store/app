@@ -11,8 +11,8 @@ import com.aloe_droid.presentation.base.theme.LargePadding
 import com.aloe_droid.presentation.base.theme.SemiLargePadding
 import com.aloe_droid.presentation.setting.component.SettingButtons
 import com.aloe_droid.presentation.setting.component.StoreSyncInfo
-import kotlinx.datetime.Clock.System
-import kotlinx.datetime.Instant
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @Composable
 fun SettingScreen(
@@ -48,7 +48,7 @@ fun SettingScreen(
 fun SettingScreenPreview() {
     SettingScreen(
         storeCount = 25565,
-        syncTime = System.now(),
+        syncTime = Clock.System.now(),
         onClickFavoriteStore = {},
         onClickPrivacyPolicy = {},
         onClickInQueryToDeveloper = {},

@@ -1,5 +1,6 @@
 package com.aloe_droid.presentation.filtered_store
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Search
@@ -10,34 +11,31 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
+import androidx.compose.ui.unit.dp
 import com.aloe_droid.presentation.R
-import com.aloe_droid.presentation.base.theme.DefaultTopBarMaxHeight
-import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreUiState
+import com.aloe_droid.presentation.filtered_store.data.StoreFilter
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FilteredStoreTopBar(
-    backStackEntry: NavBackStackEntry,
+    storeFilter: StoreFilter,
+    scrollBehavior: TopAppBarScrollBehavior,
     navigateUp: () -> Unit,
     navigateToSearch: () -> Unit,
 ) {
-    val viewModel: FilteredStoreViewModel = hiltViewModel(viewModelStoreOwner = backStackEntry)
-    val uiState: FilteredStoreUiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val title = with(uiState.storeFilter) {
-        if(onlyFavorites) stringResource(id = R.string.favorite)
-        else if (searchQuery.isNotBlank()) searchQuery
-        else stringResource(id = category.getNameRes())
+    val title = with(storeFilter) {
+        if (onlyFavorites) stringResource(id = R.string.favorite)
+        else searchQuery.ifBlank { stringResource(id = category.getNameRes()) }
     }
 
     FilteredStoreTopBar(
         title = title,
+        scrollBehavior = scrollBehavior,
         navigateUp = navigateUp,
         navigateToSearch = navigateToSearch
     )
@@ -47,11 +45,13 @@ fun FilteredStoreTopBar(
 @OptIn(ExperimentalMaterial3Api::class)
 private fun FilteredStoreTopBar(
     title: String,
+    scrollBehavior: TopAppBarScrollBehavior,
     navigateUp: () -> Unit,
     navigateToSearch: () -> Unit
 ) {
     TopAppBar(
-        expandedHeight = DefaultTopBarMaxHeight,
+        windowInsets = WindowInsets(top = 0.dp),
+        scrollBehavior = scrollBehavior,
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.secondary
         ),
@@ -81,11 +81,13 @@ private fun FilteredStoreTopBar(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 @Preview
 fun FilteredStoreTopBarPreview() {
     FilteredStoreTopBar(
         title = "일식",
+        scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(),
         navigateUp = {},
         navigateToSearch = {}
     )

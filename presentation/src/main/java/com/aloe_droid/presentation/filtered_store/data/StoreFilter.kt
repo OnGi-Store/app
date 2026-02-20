@@ -1,9 +1,10 @@
 package com.aloe_droid.presentation.filtered_store.data
 
+import android.os.Parcelable
 import androidx.compose.runtime.Stable
-import kotlinx.serialization.Serializable
+import kotlinx.parcelize.Parcelize
 
-@Serializable
+@Parcelize
 @Stable
 data class StoreFilter(
     val category: StoreCategory = StoreCategory.NONE,
@@ -11,4 +12,4 @@ data class StoreFilter(
     val distanceRange: StoreDistanceRange = StoreDistanceRange.K_5,
     val searchQuery: String = "",
     val onlyFavorites: Boolean = false
-)
+) : Parcelable

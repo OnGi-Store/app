@@ -11,27 +11,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavDestination
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.toRoute
 import com.aloe_droid.presentation.base.theme.BottomBarHeight
 import com.aloe_droid.presentation.base.theme.ZeroDp
-import com.aloe_droid.presentation.base.view.UiContract.Route
-import com.aloe_droid.presentation.search.contract.Search
-import kotlin.reflect.KClass
+import com.aloe_droid.presentation.base.view.UiContract.RouteKey
+import com.aloe_droid.presentation.search.contract.SearchKey
 
 @Composable
 fun OnGiBottomBar(
     bottomRouteList: List<BottomRoute>,
-    backStackEntry: NavBackStackEntry?,
-    selectRoute: (Route) -> Unit
+    currentStack: RouteKey,
+    selectRoute: (RouteKey) -> Unit
 ) {
-    if (backStackEntry.isBottomSearch() || backStackEntry.isNowBottomRoute()) {
+    val isBottomRoute: Boolean = bottomRouteList.any { it.routeKey == currentStack }
+    val isSearchFromBottom: Boolean =
+        currentStack is SearchKey && currentStack.isFromBottomNavigate
+
+    if (isBottomRoute || isSearchFromBottom) {
         BottomBar(
             bottomRouteList = bottomRouteList,
-            backStackEntry = backStackEntry,
+            currentStack = currentStack,
             selectRoute = selectRoute
         )
     }
@@ -40,8 +38,8 @@ fun OnGiBottomBar(
 @Composable
 private fun BottomBar(
     bottomRouteList: List<BottomRoute>,
-    backStackEntry: NavBackStackEntry?,
-    selectRoute: (Route) -> Unit,
+    currentStack: RouteKey,
+    selectRoute: (RouteKey) -> Unit,
     selectedColor: Color = MaterialTheme.colorScheme.onSurface,
     unSelectedColor: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
 ) {
@@ -50,12 +48,8 @@ private fun BottomBar(
         windowInsets = WindowInsets(bottom = ZeroDp)
     ) {
         bottomRouteList.forEach { bottomRoute: BottomRoute ->
-            with(bottomRoute) {
-                val isSelected: Boolean = backStackEntry?.let {
-                    backStackEntry.destination.hierarchy.any {
-                        it.hasRoute(bottomRoute.route::class)
-                    }
-                } == true
+            with(receiver = bottomRoute) {
+                val isSelected: Boolean = bottomRoute.routeKey == currentStack
                 val res: Int = if (isSelected) selectedIconRes else unSelectedIconRes
                 val color: Color = if (isSelected) selectedColor else unSelectedColor
 
@@ -69,32 +63,9 @@ private fun BottomBar(
                     },
                     label = { Text(text = name, color = color) },
                     selected = isSelected,
-                    onClick = { selectRoute(route) }
+                    onClick = { selectRoute(routeKey) }
                 )
             }
         }
-    }
-}
-
-private fun NavBackStackEntry?.isBottomSearch(): Boolean {
-    if (this == null) return false
-    val search: Search? = runCatching {
-        toRoute<Search>()
-    }.getOrNull()
-
-    return !(search == null || !search.isFromBottomNavigate)
-}
-
-private fun NavBackStackEntry?.isNowBottomRoute(): Boolean =
-    this?.destination?.containsBottomRoute() == true
-
-private fun NavDestination.containsBottomRoute(): Boolean {
-    val bottomList: List<KClass<*>> = BottomRoute.DefaultBottomList.map { it.route::class }
-    return containsRoute(bottomList)
-}
-
-private fun NavDestination.containsRoute(targets: List<KClass<*>>): Boolean {
-    return targets.filterNot { it == Search::class }.any { target: KClass<*> ->
-        hasRoute(target)
     }
 }

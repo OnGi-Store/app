@@ -1,6 +1,5 @@
 package com.aloe_droid.presentation.home
 
-import androidx.lifecycle.SavedStateHandle
 import com.aloe_droid.domain.entity.HomeEntity
 import com.aloe_droid.domain.exception.LocationPermissionException
 import com.aloe_droid.domain.usecase.GetHomeInfoUseCase
@@ -10,11 +9,15 @@ import com.aloe_droid.presentation.filtered_store.data.StoreFilter
 import com.aloe_droid.presentation.filtered_store.data.StoreSortType
 import com.aloe_droid.presentation.home.contract.HomeEffect
 import com.aloe_droid.presentation.home.contract.HomeEvent
+import com.aloe_droid.presentation.home.contract.HomeKey
 import com.aloe_droid.presentation.home.contract.HomeUiData
 import com.aloe_droid.presentation.home.contract.HomeUiData.Companion.toHomeData
 import com.aloe_droid.presentation.home.contract.HomeUiState
 import com.aloe_droid.presentation.home.data.StoreData
 import com.google.android.gms.common.api.ResolvableApiException
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
@@ -24,13 +27,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
-import javax.inject.Inject
 
-@HiltViewModel
-class HomeViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = HomeViewModel.Factory::class)
+class HomeViewModel @AssistedInject constructor(
+    @Assisted private val navKey: HomeKey,
     private val getHomeInfoUseCase: GetHomeInfoUseCase
-) : BaseViewModel<HomeUiState, HomeEvent, HomeEffect>(savedStateHandle) {
+) : BaseViewModel<HomeKey, HomeUiState, HomeEvent, HomeEffect>(key = navKey) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiData: StateFlow<HomeUiData> by lazy {
@@ -43,7 +45,7 @@ class HomeViewModel @Inject constructor(
             .toViewModelState(initValue = HomeUiData())
     }
 
-    override fun initState(savedStateHandle: SavedStateHandle): HomeUiState = HomeUiState()
+    override fun initState(routeKey: HomeKey): HomeUiState = HomeUiState()
 
     override fun handleEvent(event: HomeEvent) {
         when (event) {
@@ -150,5 +152,10 @@ class HomeViewModel @Inject constructor(
     private fun showErrorMessage(message: String) {
         val effect: HomeEffect = HomeEffect.ShowErrorMessage(message = message)
         sendSideEffect(uiEffect = effect)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(key: HomeKey): HomeViewModel
     }
 }

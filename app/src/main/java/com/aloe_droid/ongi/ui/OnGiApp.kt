@@ -1,9 +1,11 @@
 package com.aloe_droid.ongi.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -13,67 +15,46 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import com.aloe_droid.ongi.ui.navigation.NavUtil.Companion.safeMove
-import com.aloe_droid.ongi.ui.navigation.OnGiNavHost
-import com.aloe_droid.ongi.ui.navigation.OnGiTopBar
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aloe_droid.ongi.ui.navigation.NavGraphUiState
+import com.aloe_droid.ongi.ui.navigation.NavGraphViewModel
+import com.aloe_droid.ongi.ui.navigation.OnGiNavDisplay
 import com.aloe_droid.ongi.ui.navigation.bottom.BottomRoute
 import com.aloe_droid.ongi.ui.navigation.bottom.OnGiBottomBar
 import com.aloe_droid.presentation.base.view.UiContract
-import com.aloe_droid.presentation.home.contract.Home
-import com.aloe_droid.presentation.search.contract.Search
 import kotlinx.coroutines.launch
 
 @Composable
-fun OnGiApp(navController: NavHostController = rememberNavController()) {
-    val backStackEntry: NavBackStackEntry? by navController.currentBackStackEntryAsState()
+fun OnGiApp(navGraphViewModel: NavGraphViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
+    val navState: NavGraphUiState by navGraphViewModel.navState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
+            .background(color = MaterialTheme.colorScheme.surfaceContainer)
             .navigationBarsPadding(),
         snackbarHost = {
-            SnackbarHost(snackBarHostState)
-        },
-        topBar = {
-            backStackEntry?.let {
-                OnGiTopBar(
-                    backStackEntry = it,
-                    navigateUp = { navController.safeMove { navigateUp() } },
-                    navigateToSearch = {
-                        navController.safeMove {
-                            navigate(Search())
-                        }
-                    }
-                )
-            }
+            SnackbarHost(hostState = snackBarHostState)
         },
         bottomBar = {
             OnGiBottomBar(
                 bottomRouteList = BottomRoute.DefaultBottomList,
-                backStackEntry = backStackEntry,
-                selectRoute = { route: UiContract.Route ->
-                    navController.safeMove {
-                        navigate(route) {
-                            popUpTo(graph.findStartDestination().id) { saveState = true }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                currentStack = navState.currentBackStack.last(),
+                selectRoute = { routeKey: UiContract.RouteKey ->
+                    navGraphViewModel.select(routeKey = routeKey)
                 }
             )
         }
     ) { innerPadding: PaddingValues ->
-        OnGiNavHost(
-            modifier = Modifier.padding(innerPadding),
-            navController = navController,
-            startRoute = Home,
+        OnGiNavDisplay(
+            modifier = Modifier.padding(paddingValues = innerPadding),
+            navGraphState = navState,
+            navigate = navGraphViewModel::navigate,
+            onBack = navGraphViewModel::onBack,
+            popBackStack = navGraphViewModel::popBackStack,
             showSnackMessage = { snackBarVisuals: SnackbarVisuals ->
                 scope.launch {
                     snackBarHostState.currentSnackbarData?.dismiss()

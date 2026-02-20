@@ -1,14 +1,15 @@
 package com.aloe_droid.presentation.search
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.ui.NavDisplay
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import com.aloe_droid.domain.entity.SearchHistory
@@ -17,37 +18,44 @@ import com.aloe_droid.presentation.base.component.LoadingScreen
 import com.aloe_droid.presentation.base.view.BaseSnackBarVisuals
 import com.aloe_droid.presentation.base.view.CollectSideEffects
 import com.aloe_droid.presentation.base.view.ScreenTransition
-import com.aloe_droid.presentation.filtered_store.contract.FilteredStore
-import com.aloe_droid.presentation.home.contract.Home
-import com.aloe_droid.presentation.search.contract.Search
+import com.aloe_droid.presentation.base.view.UiContract
+import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreKey
+import com.aloe_droid.presentation.home.contract.HomeKey
 import com.aloe_droid.presentation.search.contract.SearchEffect
 import com.aloe_droid.presentation.search.contract.SearchEvent
+import com.aloe_droid.presentation.search.contract.SearchKey
 import com.aloe_droid.presentation.search.contract.SearchUiState
 import com.aloe_droid.presentation.search.data.SearchedStore
 import java.util.UUID
 
-fun NavGraphBuilder.searchScreen(
+fun EntryProviderScope<UiContract.RouteKey>.searchScreen(
     showSnackMessage: (SnackbarVisuals) -> Unit,
     navigateToStore: (UUID) -> Unit,
     navigateToFilteredStore: (String) -> Unit,
     navigateUp: () -> Unit,
-) = composable<Search>(
-    enterTransition = {
-        if (initialState.destination.hasRoute<Home>()) ScreenTransition.slideInFromRight()
-        else if (initialState.destination.hasRoute<FilteredStore>()) ScreenTransition.fadeInAnim()
-        else ScreenTransition.slideInFromLeft()
-    },
-    exitTransition = {
-        if (targetState.destination.hasRoute<Home>()) ScreenTransition.slideOutToRight()
-        else if (targetState.destination.hasRoute<FilteredStore>()) ScreenTransition.fadeOutAnim()
-        else ScreenTransition.slideOutToLeft()
-    },
-    popEnterTransition = {
-        ScreenTransition.slideInFromLeft()
+) = entry<SearchKey>(
+    clazzContentKey = { it },
+    metadata = NavDisplay.transitionSpec {
+        val isFromLeftTab: Boolean = initialState.key is HomeKey
+        val isFromFilteredStore: Boolean = initialState.key is FilteredStoreKey
+        if (isFromLeftTab) {
+            ScreenTransition.slideInFromRight() togetherWith ScreenTransition.slideOutToLeft()
+        } else if (isFromFilteredStore) {
+            ScreenTransition.fadeInAnim() togetherWith ScreenTransition.fadeOutAnim()
+        } else {
+            ScreenTransition.slideInFromLeft() togetherWith ScreenTransition.slideOutToRight()
+        }
+    } + NavDisplay.popTransitionSpec {
+        val isFromFilteredStore: Boolean = initialState.key is FilteredStoreKey
+        if (isFromFilteredStore) {
+            ScreenTransition.fadeInAnim() togetherWith ScreenTransition.fadeOutAnim()
+        } else {
+            EnterTransition.None togetherWith ExitTransition.None
+        }
     }
-) { backStackEntry: NavBackStackEntry ->
-    val fromBottomNavi: Boolean? = backStackEntry.arguments?.getBoolean(Search.iS_BOTTOM)
-    val viewModel: SearchViewModel = hiltViewModel()
+) { key: SearchKey ->
+    val viewModel: SearchViewModel =
+        hiltViewModel { factory: SearchViewModel.Factory -> factory.create(key = key) }
     val uiState: SearchUiState by viewModel.uiState.collectAsStateWithLifecycle()
     val storeItems: LazyPagingItems<SearchedStore> = viewModel.queryResult
         .collectAsLazyPagingItems()
@@ -80,7 +88,7 @@ fun NavGraphBuilder.searchScreen(
         LoadingScreen(content = stringResource(id = R.string.loading))
     } else {
         SearchScreen(
-            canGoUp = fromBottomNavi == false,
+            canGoUp = !key.isFromBottomNavigate,
             storeItems = storeItems,
             historyItems = historyItems,
             query = uiState.searchQuery,

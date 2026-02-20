@@ -1,11 +1,11 @@
 package com.aloe_droid.presentation.splash
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
 import com.aloe_droid.domain.usecase.FindOrCreateUserUseCase
 import com.aloe_droid.presentation.base.view.BaseViewModel
 import com.aloe_droid.presentation.splash.contract.effect.SplashEffect
 import com.aloe_droid.presentation.splash.contract.event.SplashEvent
+import com.aloe_droid.presentation.splash.contract.route.SplashKey
 import com.aloe_droid.presentation.splash.contract.state.SplashUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.firstOrNull
@@ -14,11 +14,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
     private val findOrCreateUserUseCase: FindOrCreateUserUseCase
-) : BaseViewModel<SplashUiState, SplashEvent, SplashEffect>(savedStateHandle) {
+) : BaseViewModel<SplashKey, SplashUiState, SplashEvent, SplashEffect>(key = SplashKey) {
 
-    override fun initState(savedStateHandle: SavedStateHandle): SplashUiState {
+    override fun initState(routeKey: SplashKey): SplashUiState {
         return SplashUiState()
     }
 

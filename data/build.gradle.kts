@@ -12,7 +12,7 @@ plugins {
 
 android {
     namespace = "com.aloe_droid.data"
-    compileSdk = 35
+    compileSdk = 36
 
     val properties = Properties()
     properties.load(FileInputStream(rootProject.file("local.properties")))
@@ -35,11 +35,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-    kotlinOptions {
-        jvmTarget = "11"
+        sourceCompatibility = JavaVersion.VERSION_21
+        targetCompatibility = JavaVersion.VERSION_21
     }
     buildFeatures {
         buildConfig = true

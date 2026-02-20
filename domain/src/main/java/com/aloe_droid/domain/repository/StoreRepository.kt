@@ -6,15 +6,15 @@ import com.aloe_droid.domain.entity.Store
 import com.aloe_droid.domain.entity.StoreDetail
 import com.aloe_droid.domain.entity.StoreQuery
 import kotlinx.coroutines.flow.Flow
-import kotlinx.datetime.Instant
 import java.util.UUID
+import kotlin.time.Instant
 
 interface StoreRepository {
     fun getStoreList(storeQuery: StoreQuery): Flow<List<Store>>
 
     fun getStoreStream(storeQuery: StoreQuery): Flow<PagingData<Store>>
 
-    fun getLocalStore(storeId: UUID) : Flow<Store>
+    fun getLocalStore(storeId: UUID): Flow<Store>
 
     fun getStore(id: UUID, latitude: Double, longitude: Double): Flow<Store>
 

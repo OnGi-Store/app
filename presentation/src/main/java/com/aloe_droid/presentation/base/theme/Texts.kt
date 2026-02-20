@@ -5,12 +5,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
 import com.aloe_droid.presentation.R
 import com.aloe_droid.presentation.filtered_store.data.StoreDistanceRange
-import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.util.Date
 import java.util.Locale
+import kotlin.time.Instant
 
 fun Double.toDistance(): String = String.format(Locale.getDefault(), "%.1fkm", this)
 

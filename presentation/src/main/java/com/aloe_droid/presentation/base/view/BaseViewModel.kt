@@ -1,6 +1,5 @@
 package com.aloe_droid.presentation.base.view
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
@@ -18,11 +17,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
 
-abstract class BaseViewModel<UiState : UiContract.State, UiEvent : UiContract.Event, UiEffect : UiContract.SideEffect>(
-    savedStateHandle: SavedStateHandle
+abstract class BaseViewModel<UiKey : UiContract.RouteKey, UiState : UiContract.State, UiEvent : UiContract.Event, UiEffect : UiContract.SideEffect>(
+    val key: UiKey
 ) : ViewModel() {
 
-    private val _uiState by lazy { MutableStateFlow(initState(savedStateHandle)) }
+    private val _uiState by lazy { MutableStateFlow(value = initState(routeKey = key)) }
     val uiState by lazy { _uiState.asStateFlow() }
     val currentState: UiState
         get() = uiState.value
@@ -65,7 +64,7 @@ abstract class BaseViewModel<UiState : UiContract.State, UiEvent : UiContract.Ev
         initialValue = initValue
     )
 
-    abstract fun initState(savedStateHandle: SavedStateHandle): UiState
+    abstract fun initState(routeKey: UiKey): UiState
 
     abstract fun handleEvent(event: UiEvent)
 

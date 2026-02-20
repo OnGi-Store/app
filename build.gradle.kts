@@ -9,3 +9,12 @@ plugins {
     alias(libs.plugins.hilt.android) apply false
     alias(libs.plugins.ksp) apply false
 }
+
+subprojects {
+    configurations.configureEach {
+        exclude(
+            group = "org.jetbrains.kotlin",
+            module = "kotlin-android-extensions-runtime"
+        )
+    }
+}

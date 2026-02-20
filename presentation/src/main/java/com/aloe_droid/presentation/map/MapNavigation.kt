@@ -1,47 +1,58 @@
 package com.aloe_droid.presentation.map
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.ui.NavDisplay
 import com.aloe_droid.presentation.R
 import com.aloe_droid.presentation.base.component.LoadingScreen
 import com.aloe_droid.presentation.base.view.ScreenTransition
+import com.aloe_droid.presentation.base.view.UiContract
+import com.aloe_droid.presentation.home.contract.HomeKey
 import com.aloe_droid.presentation.map.component.CollectMapSideEffects
 import com.aloe_droid.presentation.map.component.LocationHandler
-import com.aloe_droid.presentation.map.contract.Map
 import com.aloe_droid.presentation.map.contract.MapEvent
+import com.aloe_droid.presentation.map.contract.MapKey
 import com.aloe_droid.presentation.map.contract.MapUiData
 import com.aloe_droid.presentation.map.contract.MapUiState
 import com.aloe_droid.presentation.map.data.MapData
 import com.aloe_droid.presentation.map.data.StoreMapData
-import com.aloe_droid.presentation.setting.contract.Setting
-import com.aloe_droid.presentation.store.contract.Store
+import com.aloe_droid.presentation.search.contract.SearchKey
+import com.aloe_droid.presentation.store.contract.StoreKey
 import com.naver.maps.geometry.LatLng
 import java.util.UUID
 
-fun NavGraphBuilder.mapScreen(
+fun EntryProviderScope<UiContract.RouteKey>.mapScreen(
     showSnackMessage: (SnackbarVisuals) -> Unit,
     navigateToStore: (UUID) -> Unit,
-) = composable<Map>(
-    enterTransition = {
-        if (initialState.destination.hasRoute<Setting>()) ScreenTransition.slideInFromLeft()
-        else if (initialState.destination.hasRoute<Store>()) ScreenTransition.fadeInAnim()
-        else ScreenTransition.slideInFromRight()
-    },
-    exitTransition = {
-        if (targetState.destination.hasRoute<Setting>()) ScreenTransition.slideOutToLeft()
-        else if (targetState.destination.hasRoute<Store>()) ScreenTransition.fadeOutAnim()
-        else ScreenTransition.slideOutToRight()
-    },
-) {
-    val viewModel: MapViewModel = hiltViewModel()
+) = entry<MapKey>(
+    clazzContentKey = { it },
+    metadata = NavDisplay.transitionSpec {
+        val isFromLeftTab = initialState.key is HomeKey || initialState.key is SearchKey
+        if (isFromLeftTab) {
+            ScreenTransition.slideInFromRight() togetherWith ScreenTransition.slideOutToLeft()
+        } else {
+            ScreenTransition.slideInFromLeft() togetherWith ScreenTransition.slideOutToRight()
+        }
+    } + NavDisplay.popTransitionSpec {
+        val isFromStore = initialState.key is StoreKey
+        if (isFromStore) {
+            ScreenTransition.fadeInAnim() togetherWith ScreenTransition.fadeOutAnim()
+        } else {
+            EnterTransition.None togetherWith ExitTransition.None
+        }
+    }
+) { key: MapKey ->
+    val viewModel: MapViewModel =
+        hiltViewModel { factory: MapViewModel.Factory -> factory.create(key = key) }
     val uiState: MapUiState by viewModel.uiState.collectAsStateWithLifecycle()
     val uiData: MapUiData by viewModel.uiData.collectAsStateWithLifecycle()
     val storeListState: LazyListState = rememberLazyListState()

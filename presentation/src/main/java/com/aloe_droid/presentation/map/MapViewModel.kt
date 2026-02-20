@@ -1,6 +1,5 @@
 package com.aloe_droid.presentation.map
 
-import androidx.lifecycle.SavedStateHandle
 import com.aloe_droid.domain.entity.Store
 import com.aloe_droid.domain.entity.StoreMapEntity
 import com.aloe_droid.domain.exception.LocationPermissionException
@@ -10,6 +9,7 @@ import com.aloe_droid.presentation.base.view.BaseViewModel
 import com.aloe_droid.presentation.home.data.LocationData.Companion.toLocationData
 import com.aloe_droid.presentation.map.contract.MapEffect
 import com.aloe_droid.presentation.map.contract.MapEvent
+import com.aloe_droid.presentation.map.contract.MapKey
 import com.aloe_droid.presentation.map.contract.MapUiData
 import com.aloe_droid.presentation.map.contract.MapUiState
 import com.aloe_droid.presentation.map.data.MapData
@@ -17,6 +17,9 @@ import com.aloe_droid.presentation.map.data.StoreMapData
 import com.aloe_droid.presentation.map.data.StoreMapData.Companion.toStoreMapData
 import com.aloe_droid.presentation.map.data.StoreMapData.Companion.toStoreMapDataList
 import com.google.android.gms.common.api.ResolvableApiException
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -30,14 +33,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import timber.log.Timber
 import java.util.UUID
-import javax.inject.Inject
 
-@HiltViewModel
-class MapViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = MapViewModel.Factory::class)
+class MapViewModel @AssistedInject constructor(
+    @Assisted private val navKey: MapKey,
     private val getMapInfoUseCase: GetMapInfoUseCase,
     private val getStoreInfoUseCase: GetStoreInfoUseCase,
-) : BaseViewModel<MapUiState, MapEvent, MapEffect>(savedStateHandle) {
+) : BaseViewModel<MapKey, MapUiState, MapEvent, MapEffect>(key = navKey) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val searchedStores: Flow<List<StoreMapData>> by lazy {
@@ -75,9 +77,7 @@ class MapViewModel @Inject constructor(
         }.toViewModelState(initValue = MapUiData())
     }
 
-    override fun initState(savedStateHandle: SavedStateHandle): MapUiState {
-        return MapUiState()
-    }
+    override fun initState(routeKey: MapKey): MapUiState = MapUiState()
 
     override fun handleEvent(event: MapEvent) {
         when (event) {
@@ -209,5 +209,10 @@ class MapViewModel @Inject constructor(
     private fun showErrorMessage(message: String) {
         val effect: MapEffect = MapEffect.ShowErrorMessage(message = message)
         sendSideEffect(uiEffect = effect)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(key: MapKey): MapViewModel
     }
 }
