@@ -2,8 +2,6 @@ package com.aloe_droid.presentation.store
 
 import android.content.Context
 import android.content.Intent
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -30,7 +28,6 @@ import com.aloe_droid.presentation.base.view.BaseSnackBarVisuals
 import com.aloe_droid.presentation.base.view.CollectSideEffects
 import com.aloe_droid.presentation.base.view.ScreenTransition
 import com.aloe_droid.presentation.base.view.UiContract
-import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreKey
 import com.aloe_droid.presentation.map.contract.MapKey
 import com.aloe_droid.presentation.store.contract.StoreEffect
 import com.aloe_droid.presentation.store.contract.StoreEvent
@@ -53,11 +50,11 @@ fun EntryProviderScope<UiContract.RouteKey>.storeScreen(
             ScreenTransition.slideInFromRight() togetherWith ScreenTransition.slideOutToLeft()
         }
     } + NavDisplay.popTransitionSpec {
-        val isToFilteredStore: Boolean = targetState.key is FilteredStoreKey
-        if (isToFilteredStore) {
-            ScreenTransition.slideInFromLeft() togetherWith ScreenTransition.slideOutToRight()
+        val isToMap: Boolean = targetState.key is MapKey
+        if (isToMap) {
+            ScreenTransition.fadeInAnim() togetherWith ScreenTransition.fadeOutAnim()
         } else {
-            EnterTransition.None togetherWith ExitTransition.None
+            ScreenTransition.slideInFromLeft() togetherWith ScreenTransition.slideOutToRight()
         }
     }
 ) { key: StoreKey ->
