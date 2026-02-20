@@ -11,6 +11,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.aloe_droid.presentation.base.view.UiContract
 import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreKey
 import com.aloe_droid.presentation.filtered_store.data.StoreDistanceRange
 import com.aloe_droid.presentation.filtered_store.data.StoreFilter
@@ -27,15 +28,18 @@ import java.util.UUID
 @Composable
 fun OnGiNavDisplay(
     modifier: Modifier = Modifier,
-    navGraphState: NavGraphState,
-    showSnackMessage: (SnackbarVisuals) -> Unit
+    navGraphState: NavGraphUiState,
+    showSnackMessage: (SnackbarVisuals) -> Unit,
+    navigate: (UiContract.RouteKey) -> Unit,
+    onBack: () -> Unit,
+    popBackStack: () -> Unit
 ) {
-    BackHandler(enabled = !navGraphState.isRoot, onBack = navGraphState::onBack)
+    BackHandler(enabled = !navGraphState.isRoot, onBack = onBack)
 
     NavDisplay(
         modifier = modifier,
         backStack = navGraphState.currentBackStack,
-        onBack = navGraphState::onBack,
+        onBack = onBack,
         transitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
         popTransitionSpec = { EnterTransition.None togetherWith ExitTransition.None },
         entryDecorators = listOf(
@@ -46,22 +50,22 @@ fun OnGiNavDisplay(
             homeScreen(
                 showSnackMessage = showSnackMessage,
                 navigateToFilteredStore = { filter: StoreFilter ->
-                    navGraphState.navigate(routeKey = FilteredStoreKey(storeFilter = filter))
+                    navigate(FilteredStoreKey(storeFilter = filter))
                 },
                 navigateToStore = { id: UUID ->
-                    navGraphState.navigate(routeKey = StoreKey(id = id.toString()))
+                    navigate(StoreKey(id = id.toString()))
                 }
             )
 
             searchScreen(
                 showSnackMessage = showSnackMessage,
-                navigateUp = navGraphState::popBackStack,
+                navigateUp = popBackStack,
                 navigateToStore = { id: UUID ->
-                    navGraphState.navigate(routeKey = StoreKey(id = id.toString()))
+                    navigate(StoreKey(id = id.toString()))
                 },
                 navigateToFilteredStore = { query: String ->
-                    navGraphState.navigate(
-                        routeKey = FilteredStoreKey(
+                    navigate(
+                        FilteredStoreKey(
                             storeFilter = StoreFilter(
                                 searchQuery = query,
                                 distanceRange = StoreDistanceRange.NONE
@@ -74,15 +78,15 @@ fun OnGiNavDisplay(
             mapScreen(
                 showSnackMessage = showSnackMessage,
                 navigateToStore = { id: UUID ->
-                    navGraphState.navigate(routeKey = StoreKey(id = id.toString()))
+                    navigate(StoreKey(id = id.toString()))
                 }
             )
 
             settingScreen(
                 showSnackMessage = showSnackMessage,
                 navigateToFilteredStoreWithFavorite = {
-                    navGraphState.navigate(
-                        routeKey = FilteredStoreKey(
+                    navigate(
+                        FilteredStoreKey(
                             storeFilter = StoreFilter(
                                 distanceRange = StoreDistanceRange.NONE,
                                 onlyFavorites = true
@@ -94,18 +98,18 @@ fun OnGiNavDisplay(
 
             filteredStoreScreen(
                 showSnackMessage = showSnackMessage,
-                navigateUp = navGraphState::popBackStack,
+                navigateUp = popBackStack,
                 navigateToSearch = {
-                    navGraphState.navigate(routeKey = SearchKey())
+                    navigate(SearchKey())
                 },
                 navigateToStore = { id: UUID ->
-                    navGraphState.navigate(routeKey = StoreKey(id = id.toString()))
+                    navigate(StoreKey(id = id.toString()))
                 }
             )
 
             storeScreen(
                 showSnackMessage = showSnackMessage,
-                navigateUp = navGraphState::popBackStack,
+                navigateUp = popBackStack,
             )
         }
     )

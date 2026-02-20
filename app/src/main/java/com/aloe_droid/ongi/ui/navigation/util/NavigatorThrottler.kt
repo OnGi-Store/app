@@ -1,11 +1,9 @@
-package com.aloe_droid.ongi.ui.navigation
+package com.aloe_droid.ongi.ui.navigation.util
 
-import androidx.compose.runtime.Stable
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TimeSource
 
-@Stable
 class NavigatorThrottler(private val duration: Duration = NAVIGATION_TIME.milliseconds) {
     private var lastMark: TimeSource.Monotonic.ValueTimeMark =
         TimeSource.Monotonic.markNow().minus(duration = duration)

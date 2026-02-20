@@ -11,22 +11,25 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.aloe_droid.ongi.ui.navigation.NavGraphUiState
+import com.aloe_droid.ongi.ui.navigation.NavGraphViewModel
 import com.aloe_droid.ongi.ui.navigation.OnGiNavDisplay
 import com.aloe_droid.ongi.ui.navigation.bottom.BottomRoute
-import com.aloe_droid.ongi.ui.navigation.NavGraphState
 import com.aloe_droid.ongi.ui.navigation.bottom.OnGiBottomBar
-import com.aloe_droid.ongi.ui.navigation.rememberNavGraphState
 import com.aloe_droid.presentation.base.view.UiContract
 import kotlinx.coroutines.launch
 
 @Composable
-fun OnGiApp() {
-    val navGraphState: NavGraphState = rememberNavGraphState()
+fun OnGiApp(navGraphViewModel: NavGraphViewModel = viewModel()) {
     val scope = rememberCoroutineScope()
     val snackBarHostState = remember { SnackbarHostState() }
+    val navState: NavGraphUiState by navGraphViewModel.navState.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier
@@ -39,16 +42,19 @@ fun OnGiApp() {
         bottomBar = {
             OnGiBottomBar(
                 bottomRouteList = BottomRoute.DefaultBottomList,
-                currentStack = navGraphState.currentBackStack.last(),
+                currentStack = navState.currentBackStack.last(),
                 selectRoute = { routeKey: UiContract.RouteKey ->
-                    navGraphState.select(routeKey = routeKey)
+                    navGraphViewModel.select(routeKey = routeKey)
                 }
             )
         }
     ) { innerPadding: PaddingValues ->
         OnGiNavDisplay(
             modifier = Modifier.padding(paddingValues = innerPadding),
-            navGraphState = navGraphState,
+            navGraphState = navState,
+            navigate = navGraphViewModel::navigate,
+            onBack = navGraphViewModel::onBack,
+            popBackStack = navGraphViewModel::popBackStack,
             showSnackMessage = { snackBarVisuals: SnackbarVisuals ->
                 scope.launch {
                     snackBarHostState.currentSnackbarData?.dismiss()
