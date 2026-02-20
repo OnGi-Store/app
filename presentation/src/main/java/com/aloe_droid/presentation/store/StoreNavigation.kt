@@ -2,6 +2,9 @@ package com.aloe_droid.presentation.store
 
 import android.content.Context
 import android.content.Intent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,44 +20,53 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.ui.NavDisplay
 import com.aloe_droid.presentation.R
 import com.aloe_droid.presentation.base.component.LoadingScreen
 import com.aloe_droid.presentation.base.view.BaseSnackBarVisuals
 import com.aloe_droid.presentation.base.view.CollectSideEffects
 import com.aloe_droid.presentation.base.view.ScreenTransition
-import com.aloe_droid.presentation.map.contract.Map
-import com.aloe_droid.presentation.store.contract.Store
+import com.aloe_droid.presentation.base.view.UiContract
+import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreKey
+import com.aloe_droid.presentation.map.contract.MapKey
 import com.aloe_droid.presentation.store.contract.StoreEffect
 import com.aloe_droid.presentation.store.contract.StoreEvent
+import com.aloe_droid.presentation.store.contract.StoreKey
 import com.aloe_droid.presentation.store.contract.StoreUiData
 import com.aloe_droid.presentation.store.contract.StoreUiState
 import com.aloe_droid.presentation.store.data.AddressData
-import kotlinx.serialization.InternalSerializationApi
 
-@OptIn(InternalSerializationApi::class, ExperimentalMaterial3Api::class)
-fun NavGraphBuilder.storeScreen(
+@OptIn(ExperimentalMaterial3Api::class)
+fun EntryProviderScope<UiContract.RouteKey>.storeScreen(
     showSnackMessage: (SnackbarVisuals) -> Unit,
     navigateUp: () -> Unit,
-) = composable<Store>(
-    enterTransition = {
-        if (initialState.destination.hasRoute<Map>()) ScreenTransition.fadeInAnim()
-        else ScreenTransition.slideInFromRight()
-    },
-    popExitTransition = {
-        if (targetState.destination.hasRoute<Map>()) ScreenTransition.fadeOutAnim()
-        else ScreenTransition.slideOutToRight()
+) = entry<StoreKey>(
+    clazzContentKey = { it },
+    metadata = NavDisplay.transitionSpec {
+        val isFromMap: Boolean = initialState.key is MapKey
+        if (isFromMap) {
+            ScreenTransition.fadeInAnim() togetherWith ScreenTransition.fadeOutAnim()
+        } else {
+            ScreenTransition.slideInFromRight() togetherWith ScreenTransition.slideOutToLeft()
+        }
+    } + NavDisplay.popTransitionSpec {
+        val isToFilteredStore: Boolean = targetState.key is FilteredStoreKey
+        if (isToFilteredStore) {
+            ScreenTransition.slideInFromLeft() togetherWith ScreenTransition.slideOutToRight()
+        } else {
+            EnterTransition.None togetherWith ExitTransition.None
+        }
     }
-) {
+) { key: StoreKey ->
     val context: Context = LocalContext.current
-    val viewModel: StoreViewModel = hiltViewModel()
+    val viewModel: StoreViewModel =
+        hiltViewModel { factory: StoreViewModel.Factory -> factory.create(key = key) }
     val uiState: StoreUiState by viewModel.uiState.collectAsStateWithLifecycle()
     val uiData: StoreUiData by viewModel.uiData.collectAsStateWithLifecycle()
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
     CollectSideEffects(effectFlow = viewModel.uiEffect) { sideEffect: StoreEffect ->
         when (sideEffect) {

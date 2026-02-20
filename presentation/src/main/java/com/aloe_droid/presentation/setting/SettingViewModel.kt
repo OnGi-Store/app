@@ -1,27 +1,29 @@
 package com.aloe_droid.presentation.setting
 
-import androidx.lifecycle.SavedStateHandle
 import com.aloe_droid.domain.entity.StoreSyncEntity
 import com.aloe_droid.domain.usecase.GetStoreSyncInfoUseCase
 import com.aloe_droid.presentation.base.view.BaseViewModel
 import com.aloe_droid.presentation.setting.contract.SettingEffect
 import com.aloe_droid.presentation.setting.contract.SettingEvent
+import com.aloe_droid.presentation.setting.contract.SettingKey
 import com.aloe_droid.presentation.setting.contract.SettingUiData
 import com.aloe_droid.presentation.setting.contract.SettingUiData.Companion.toSettingData
 import com.aloe_droid.presentation.setting.contract.SettingUiState
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import javax.inject.Inject
 
-@HiltViewModel
-class SettingViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = SettingViewModel.Factory::class)
+class SettingViewModel @AssistedInject constructor(
+    @Assisted private val navKey: SettingKey,
     private val getStoreSyncInfoUseCase: GetStoreSyncInfoUseCase,
-) : BaseViewModel<SettingUiState, SettingEvent, SettingEffect>(savedStateHandle) {
+) : BaseViewModel<SettingKey, SettingUiState, SettingEvent, SettingEffect>(key = navKey) {
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val uiData: StateFlow<SettingUiData> by lazy {
@@ -32,9 +34,7 @@ class SettingViewModel @Inject constructor(
             .toViewModelState(initValue = SettingUiData())
     }
 
-    override fun initState(savedStateHandle: SavedStateHandle): SettingUiState {
-        return SettingUiState()
-    }
+    override fun initState(routeKey: SettingKey): SettingUiState = SettingUiState()
 
     override fun handleEvent(event: SettingEvent) {
         when (event) {
@@ -85,5 +85,10 @@ class SettingViewModel @Inject constructor(
     private fun showErrorMessage(message: String) {
         val effect: SettingEffect = SettingEffect.ShowErrorMessage(message = message)
         sendSideEffect(uiEffect = effect)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(key: SettingKey): SettingViewModel
     }
 }

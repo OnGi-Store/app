@@ -1,23 +1,23 @@
 package com.aloe_droid.presentation.filtered_store
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import androidx.paging.map
 import com.aloe_droid.domain.entity.Store
 import com.aloe_droid.domain.usecase.GetFilteredStoreUseCase
 import com.aloe_droid.presentation.base.view.BaseViewModel
-import com.aloe_droid.presentation.filtered_store.contract.FilteredStore
 import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreEffect
 import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreEvent
+import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreKey
 import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreUiState
 import com.aloe_droid.presentation.filtered_store.data.StoreDistanceRange
-import com.aloe_droid.presentation.filtered_store.data.StoreFilterNavTypes.StoreFilterTypeMap
 import com.aloe_droid.presentation.filtered_store.data.StoreSortType
 import com.aloe_droid.presentation.home.data.StoreData
 import com.aloe_droid.presentation.home.data.StoreData.Companion.toStoreData
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -25,14 +25,15 @@ import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import javax.inject.Inject
 
-@HiltViewModel
+@HiltViewModel(assistedFactory = FilteredStoreViewModel.Factory::class)
 @OptIn(ExperimentalCoroutinesApi::class)
-class FilteredStoreViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+class FilteredStoreViewModel @AssistedInject constructor(
+    @Assisted private val navKey: FilteredStoreKey,
     private val getFilteredStoreUseCase: GetFilteredStoreUseCase
-) : BaseViewModel<FilteredStoreUiState, FilteredStoreEvent, FilteredStoreEffect>(savedStateHandle) {
+) : BaseViewModel<FilteredStoreKey, FilteredStoreUiState, FilteredStoreEvent, FilteredStoreEffect>(
+    key = navKey
+) {
 
     val pagingDataFlow: Flow<PagingData<StoreData>> by lazy {
         uiState.distinctUntilChangedBy { it.storeFilter }
@@ -55,9 +56,8 @@ class FilteredStoreViewModel @Inject constructor(
             }.cachedIn(viewModelScope)
     }
 
-    override fun initState(savedStateHandle: SavedStateHandle): FilteredStoreUiState {
-        val filteredInfo: FilteredStore = savedStateHandle.toRoute(typeMap = StoreFilterTypeMap)
-        return FilteredStoreUiState(storeFilter = filteredInfo.storeFilter)
+    override fun initState(routeKey: FilteredStoreKey): FilteredStoreUiState {
+        return FilteredStoreUiState(storeFilter = routeKey.storeFilter)
     }
 
     override fun handleEvent(event: FilteredStoreEvent) {
@@ -155,5 +155,10 @@ class FilteredStoreViewModel @Inject constructor(
         val effect: FilteredStoreEffect =
             FilteredStoreEffect.ShowErrorMessage(message = message)
         sendSideEffect(uiEffect = effect)
+    }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(key: FilteredStoreKey): FilteredStoreViewModel
     }
 }

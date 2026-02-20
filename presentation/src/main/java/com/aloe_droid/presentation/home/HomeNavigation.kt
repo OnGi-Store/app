@@ -2,25 +2,27 @@ package com.aloe_droid.presentation.home
 
 import android.content.Context
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.ui.NavDisplay
 import com.aloe_droid.presentation.R
 import com.aloe_droid.presentation.base.component.LoadingScreen
 import com.aloe_droid.presentation.base.view.BaseSnackBarVisuals
 import com.aloe_droid.presentation.base.view.CollectSideEffects
 import com.aloe_droid.presentation.base.view.ScreenTransition
+import com.aloe_droid.presentation.base.view.UiContract
 import com.aloe_droid.presentation.filtered_store.data.StoreFilter
 import com.aloe_droid.presentation.home.component.LocationHandler
-import com.aloe_droid.presentation.home.contract.Home
 import com.aloe_droid.presentation.home.contract.HomeEffect
 import com.aloe_droid.presentation.home.contract.HomeEvent
+import com.aloe_droid.presentation.home.contract.HomeKey
 import com.aloe_droid.presentation.home.contract.HomeUiData
 import com.aloe_droid.presentation.home.contract.HomeUiState
 import com.aloe_droid.presentation.home.data.BannerData
@@ -28,23 +30,25 @@ import com.aloe_droid.presentation.home.data.CategoryData
 import com.aloe_droid.presentation.home.data.StoreData
 import java.util.UUID
 
-fun NavGraphBuilder.homeScreen(
+fun EntryProviderScope<UiContract.RouteKey>.homeScreen(
     showSnackMessage: (SnackbarVisuals) -> Unit,
     navigateToFilteredStore: (StoreFilter) -> Unit,
     navigateToStore: (UUID) -> Unit
-) = composable<Home>(
-    enterTransition = { ScreenTransition.slideInFromRight() },
-    popEnterTransition = { ScreenTransition.slideInFromLeft() },
-    exitTransition = { ScreenTransition.slideOutToLeft() },
-    popExitTransition = { ScreenTransition.slideOutToRight() }
-) {
-
-    val homeViewModel: HomeViewModel = hiltViewModel()
+) = entry<HomeKey>(
+    clazzContentKey = { it },
+    metadata = NavDisplay.transitionSpec {
+        ScreenTransition.slideInFromLeft() togetherWith ScreenTransition.slideOutToRight()
+    } + NavDisplay.popTransitionSpec {
+        ScreenTransition.slideInFromRight() togetherWith ScreenTransition.slideOutToLeft()
+    }
+) { key: HomeKey ->
+    val context: Context = LocalContext.current
+    val homeViewModel: HomeViewModel =
+        hiltViewModel { factory: HomeViewModel.Factory -> factory.create(key = key) }
     val uiState: HomeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
     val uiData: HomeUiData by homeViewModel.uiData.collectAsStateWithLifecycle()
-    val context: Context = LocalContext.current
 
-    CollectSideEffects(homeViewModel.uiEffect) { sideEffect: HomeEffect ->
+    CollectSideEffects(effectFlow = homeViewModel.uiEffect) { sideEffect: HomeEffect ->
         when (sideEffect) {
             is HomeEffect.ShowErrorMessage -> {
                 val snackBarVisuals = BaseSnackBarVisuals(message = sideEffect.message)

@@ -1,20 +1,21 @@
 package com.aloe_droid.presentation.store
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.toRoute
 import com.aloe_droid.domain.entity.StoreEntity
 import com.aloe_droid.domain.usecase.GetStoreInfoUseCase
 import com.aloe_droid.domain.usecase.ToggleStoreLikeUseCase
 import com.aloe_droid.presentation.base.view.BaseViewModel
-import com.aloe_droid.presentation.store.contract.Store
 import com.aloe_droid.presentation.store.contract.StoreEffect
 import com.aloe_droid.presentation.store.contract.StoreEvent
+import com.aloe_droid.presentation.store.contract.StoreKey
 import com.aloe_droid.presentation.store.contract.StoreUiData
 import com.aloe_droid.presentation.store.contract.StoreUiState
 import com.aloe_droid.presentation.store.data.AddressData
 import com.aloe_droid.presentation.store.data.StoreData
 import com.aloe_droid.presentation.store.data.StoreData.Companion.toStoreData
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -27,14 +28,13 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import java.util.UUID
-import javax.inject.Inject
 
-@HiltViewModel
-class StoreViewModel @Inject constructor(
-    savedStateHandle: SavedStateHandle,
+@HiltViewModel(assistedFactory = StoreViewModel.Factory::class)
+class StoreViewModel @AssistedInject constructor(
+    @Assisted private val navKey: StoreKey,
     private val getStoreInfoUseCase: GetStoreInfoUseCase,
     private val toggleStoreLikeUseCase: ToggleStoreLikeUseCase
-) : BaseViewModel<StoreUiState, StoreEvent, StoreEffect>(savedStateHandle) {
+) : BaseViewModel<StoreKey, StoreUiState, StoreEvent, StoreEffect>(key = navKey) {
 
     private val localStore = MutableStateFlow<StoreData?>(null)
 
@@ -48,9 +48,8 @@ class StoreViewModel @Inject constructor(
             .toViewModelState(initValue = StoreUiData())
     }
 
-    override fun initState(savedStateHandle: SavedStateHandle): StoreUiState {
-        val store: Store = savedStateHandle.toRoute()
-        return StoreUiState(id = UUID.fromString(store.id))
+    override fun initState(routeKey: StoreKey): StoreUiState {
+        return StoreUiState(id = UUID.fromString(routeKey.id))
     }
 
     override fun handleEvent(event: StoreEvent) {
@@ -119,4 +118,9 @@ class StoreViewModel @Inject constructor(
         combine(localStore) { remote: StoreUiData, local: StoreData? ->
             local?.let { remote.copy(store = it) } ?: remote
         }
+
+    @AssistedFactory
+    interface Factory {
+        fun create(key: StoreKey): StoreViewModel
+    }
 }

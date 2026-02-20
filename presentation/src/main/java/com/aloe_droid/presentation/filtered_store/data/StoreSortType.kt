@@ -2,7 +2,9 @@ package com.aloe_droid.presentation.filtered_store.data
 
 import com.aloe_droid.domain.entity.StoreQuerySortType
 import com.aloe_droid.presentation.R
+import kotlinx.serialization.Serializable
 
+@Serializable
 enum class StoreSortType {
     NAME,
     FAVORITE,

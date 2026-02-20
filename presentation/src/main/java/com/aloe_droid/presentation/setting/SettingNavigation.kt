@@ -4,50 +4,51 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.togetherWith
 import androidx.compose.material3.SnackbarVisuals
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.NavGraphBuilder
-import androidx.navigation.compose.composable
+import androidx.navigation3.runtime.EntryProviderScope
+import androidx.navigation3.ui.NavDisplay
 import com.aloe_droid.presentation.BuildConfig
 import com.aloe_droid.presentation.R
 import com.aloe_droid.presentation.base.component.LoadingScreen
 import com.aloe_droid.presentation.base.view.BaseSnackBarVisuals
 import com.aloe_droid.presentation.base.view.CollectSideEffects
 import com.aloe_droid.presentation.base.view.ScreenTransition
-import com.aloe_droid.presentation.filtered_store.contract.FilteredStore
-import com.aloe_droid.presentation.setting.contract.Setting
+import com.aloe_droid.presentation.base.view.UiContract
+import com.aloe_droid.presentation.filtered_store.contract.FilteredStoreKey
 import com.aloe_droid.presentation.setting.contract.SettingEffect
 import com.aloe_droid.presentation.setting.contract.SettingEvent
+import com.aloe_droid.presentation.setting.contract.SettingKey
 import com.aloe_droid.presentation.setting.contract.SettingUiData
 import com.aloe_droid.presentation.setting.contract.SettingUiState
 
-fun NavGraphBuilder.settingScreen(
+fun EntryProviderScope<UiContract.RouteKey>.settingScreen(
     showSnackMessage: (SnackbarVisuals) -> Unit,
     navigateToFilteredStoreWithFavorite: () -> Unit,
-) = composable<Setting>(
-    enterTransition = {
-        ScreenTransition.slideInFromRight()
-    },
-    popEnterTransition = {
-        if (initialState.destination.hasRoute<FilteredStore>()) ScreenTransition.slideInFromLeft()
-        else ScreenTransition.slideInFromRight()
-    },
-    exitTransition = {
-        if (targetState.destination.hasRoute<FilteredStore>()) ScreenTransition.slideOutToLeft()
-        else ScreenTransition.slideOutToRight()
-    },
-    popExitTransition = {
-        ScreenTransition.slideOutToRight()
+) = entry<SettingKey>(
+    clazzContentKey = { it },
+    metadata = NavDisplay.transitionSpec {
+        ScreenTransition.slideInFromRight() togetherWith ScreenTransition.slideOutToLeft()
+    } + NavDisplay.popTransitionSpec {
+        val isFromFilteredStore: Boolean = initialState.key is FilteredStoreKey
+        if (isFromFilteredStore) {
+            ScreenTransition.slideInFromRight() togetherWith ExitTransition.None
+        } else {
+            EnterTransition.None togetherWith ExitTransition.None
+        }
     }
-) {
+) { key: SettingKey ->
     val context: Context = LocalContext.current
-    val viewModel: SettingViewModel = hiltViewModel()
+    val viewModel: SettingViewModel =
+        hiltViewModel { factory: SettingViewModel.Factory -> factory.create(key = key) }
     val uiState: SettingUiState by viewModel.uiState.collectAsStateWithLifecycle()
     val uiData: SettingUiData by viewModel.uiData.collectAsStateWithLifecycle()
 
